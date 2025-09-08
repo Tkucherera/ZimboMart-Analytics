@@ -32,6 +32,7 @@ def get_property_details(soup) -> list[Property]:
         date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         title = listing.find('h2', class_='mb-0.5').text.strip()
         price = listing.find('div', class_='result-price').text.strip()
+        price = price.replace('USD ', '').replace(',', '').strip()
 
         # Location is Neighbourhood and City separated by a comma
         location_div = listing.find('div', class_='text-graypurpledark')
@@ -40,9 +41,11 @@ def get_property_details(soup) -> list[Property]:
 
         # ammenities
         buiding_area = listing.find('span', class_='building-area').text.strip() if listing.find('span', class_='building-area') else None
+        buiding_area = buiding_area.replace('m²', '').replace(',', '').strip() if buiding_area else None
         land_area = listing.find('span', class_='land-area').text.strip() if listing.find('span', class_='land-area') else None
-        bedrooms = listing.find('span', class_='bed').text.strip() if listing.find('span', class_='bedrooms') else None
-        bathrooms = listing.find('span', class_='bath').text.strip() if listing.find('span', class_='bathrooms') else None
+        land_area = land_area.replace('m²', '').replace(',', '').strip() if land_area else None
+        bedrooms = listing.find('span', class_='bed').text.strip() if listing.find('span', class_='bed') else None
+        bathrooms = listing.find('span', class_='bath').text.strip() if listing.find('span', class_='bath') else None
 
         details = Property(date, title, price, neighbourhood, city, buiding_area, land_area, bedrooms, bathrooms)
         properties.append(details)
@@ -69,16 +72,17 @@ def get_properties_from_site(url) -> list[Property]:
     return properties
 
 
-def save_properties_to_file(properties, filename='./data/properties.csv'):
+def save_properties_to_file(properties, filename='../data/properties.csv'):
     with open(filename, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
-        writer.writerow(['Title', 'Price', 'Neighbourhood', 'City', 'Building Area', 'Land Area', 'Bedrooms', 'Bathrooms'])
+        writer.writerow(['Date','Title', 'Price (USD)', 'Neighbourhood', 'City', 'Building Area (sqm)', 'Land Area (sqm)', 'Bedrooms', 'Bathrooms'])
         for prop in properties:
-            writer.writerow([prop.title, prop.price, prop.neighbourhood, prop.city, prop.building_area, prop.land_area, prop.bedrooms, prop.bathrooms])
+            writer.writerow([prop.date, prop.title, prop.price, prop.neighbourhood, prop.city, prop.building_area, prop.land_area, prop.bedrooms, prop.bathrooms])
 
 
 if __name__ == '__main__':
     url = 'https://www.property.co.zw/property-for-sale'
     properties = get_properties_from_site(url)
     save_properties_to_file(properties)
+
 
